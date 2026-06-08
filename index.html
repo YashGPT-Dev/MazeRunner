@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Autonomous Grid-Bot AI Simulation</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <h1>Autonomous Grid-Bot AI</h1>
+    <p class="subtitle">
+      Program your robot and navigate through obstacles to reach the target.
+    </p>
+    <div id="simulation-container">
+      <div id="grid"></div>
+      <div id="controls">
+        <label>Instructions</label>
+
+        <div id="instructions">
+          <p><b>Commands:</b></p>
+          <code>moveUp()</code><br />
+          <code>moveDown()</code><br />
+          <code>moveLeft()</code><br />
+          <code>moveRight()</code>
+
+          <br /><br />
+
+          <p><b>Sensors:</b></p>
+          <code>getRobotPos()</code><br />
+          <code>isWall(x, y)</code>
+
+          <br /><br />
+
+          <p><b>Example:</b></p>
+          <pre>
+moveRight();
+moveRight();
+moveDown();
+  </pre
+          >
+        </div>
+
+        <label for="code">Your Script</label>
+
+        <textarea
+          id="code"
+          spellcheck="false"
+          placeholder="// Write your robot logic here
+
+moveRight();
+moveDown();
+"
+        ></textarea>
+        <div class="btn-group">
+          <button onclick="runScript()">▶ Run Script</button>
+          <button class="reset-btn" onclick="resetSim()">↺ Reset</button>
+        </div>
+        <div id="log"></div>
+      </div>
+    </div>
+
+    <script>
+      const GRID_SIZE = 10;
+      let gridData = [];
+      let robotPos = { x: 0, y: 0 };
+      const targetPos = { x: 9, y: 9 };
+      let obstacles = [
+        { x: 5, y: 5 },
+        { x: 5, y: 6 },
+      ];
+
+      function createGrid() {
+        const gridEl = document.getElementById("grid");
+        gridEl.innerHTML = "";
+        gridEl.style.gridTemplateColumns = `repeat(${GRID_SIZE}, 44px)`;
+
+        for (let y = 0; y < GRID_SIZE; y++) {
+          for (let x = 0; x < GRID_SIZE; x++) {
+            const cell = document.createElement("div");
+            cell.className = "cell";
+            cell.id = `cell-${x}-${y}`;
+
+            if (x === robotPos.x && y === robotPos.y) {
+              cell.classList.add("robot");
+              cell.innerHTML = "🤖";
+            } else if (x === targetPos.x && y === targetPos.y) {
+              cell.classList.add("target");
+              cell.innerHTML = "🎯";
+            } else if (isObstacle(x, y)) {
+              cell.classList.add("obstacle");
+              cell.innerHTML = "⚠";
+            } else if (isWall(x, y)) {
+              cell.classList.add("wall");
+              cell.innerHTML = "🧱";
+            }
+
+            gridEl.appendChild(cell);
+          }
+        }
+      }
+
+      function isWall(x, y) {
+        return x === 3 && y > 1 && y < 7;
+      }
+      function isObstacle(x, y) {
+        return obstacles.some((o) => o.x === x && o.y === y);
+      }
+
+      function moveRobot(dx, dy) {
+        const newX = robotPos.x + dx;
+        const newY = robotPos.y + dy;
+        if (
+          newX >= 0 &&
+          newX < GRID_SIZE &&
+          newY >= 0 &&
+          newY < GRID_SIZE &&
+          !isWall(newX, newY) &&
+          !isObstacle(newX, newY)
+        ) {
+          robotPos.x = newX;
+          robotPos.y = newY;
+          createGrid();
+          log(`Moved to ${robotPos.x},${robotPos.y}`);
+        } else {
+          log("Move invalid!");
+        }
+      }
+
+      // Logic Functions for User
+      const moveUp = () => moveRobot(0, -1);
+      const moveDown = () => moveRobot(0, 1);
+      const moveLeft = () => moveRobot(-1, 0);
+      const moveRight = () => moveRobot(1, 0);
+      const getRobotPos = () => ({ ...robotPos });
+
+      function runScript() {
+        const code = document.getElementById("code").value;
+        try {
+          eval(code); // Run user script
+        } catch (e) {
+          log("Error: " + e.message);
+        }
+      }
+
+      function log(msg) {
+        const logEl = document.getElementById("log");
+        logEl.innerHTML += `<div>${msg}</div>`;
+        logEl.scrollTop = logEl.scrollHeight;
+      }
+
+      function resetSim() {
+        robotPos = { x: 0, y: 0 };
+        document.getElementById("log").innerHTML = "";
+        createGrid();
+      }
+
+      // Initial render
+      createGrid();
+    </script>
+  </body>
+</html>
